@@ -6,32 +6,52 @@ import jwt
 
 Base = declarative_base()
 
-engine = create_engine('mysql://root:123@127.0.0.1/test', echo=True)
+engine = create_engine('mysql://root:123@127.0.0.1/sdo?charset=utf8', echo=True)
 
 Session = sessionmaker(bind=engine)
+
+
+def get_user_with_email(email):
+    user = dict.fromkeys(['user'])
+    errors = {}
+    session = Session()
+
+    find_user = session.query(User).filter(User.email == email).one_or_none()
+    if find_user is None:
+        pass
+    else:
+        errors['email'] = find_user.email
+        user['user'] = errors
+
+    session.commit()
+    session.close()
+
+    return user
 
 
 class User(Base):
     __tablename__ = 'users'
 
     id = Column(Integer, primary_key=True)
-    username = Column(String(40), unique=True)
+    name = Column(String(40))
+    second_name = Column(String(40))
+    third_name = Column(String(40))
     email = Column(String(40), unique=True)
+    user_status = Column(Integer)
     password_digest = Column(String(100))
     created_date = Column(DateTime(timezone=True), server_default=func.now())
-    updated_date = Column(DateTime(timezone=True), onupdate=func.now())
 
-    def __init__(self, username, email, password_digest):
-        self.username = username
+    def __init__(self, name, second_name, third_name, email, user_status, password_digest):
+        self.name = name
+        self.second_name = second_name
+        self.third_name = third_name
         self.email = email
+        self.user_status = user_status
         self.password_digest = password_digest
-
-    def __repr__(self):
-        return "<User('%s', '%s', '%s')>" % (self.username, self.email, self.password_digest)
 
     def add_user(self):
         session_for_new_user = Session()
-        new_user = User(self.username, self.email,
+        new_user = User(self.name, self.second_name, self.third_name, self.email, self.user_status,
                         bcrypt.hashpw(self.password_digest.encode('utf-8'), bcrypt.gensalt()))
         session_for_new_user.add(new_user)
         session_for_new_user.commit()
@@ -58,32 +78,6 @@ class User(Base):
             return find_user
         else:
             return False
-
-    def check_uniqueness(self):
-        user = dict.fromkeys(['user'])
-        errors = {}
-        session = Session()
-
-        find_user = session.query(User).filter(User.username == self.username).one_or_none()
-        if find_user is None:
-            pass
-        else:
-            errors['username'] = find_user.username
-            errors['email'] = find_user.email
-            user['user'] = errors
-
-        find_user = session.query(User).filter(User.email == self.email).one_or_none()
-        if find_user is None:
-            pass
-        else:
-            errors['username'] = find_user.username
-            errors['email'] = find_user.email
-            user['user'] = errors
-
-        session.commit()
-        session.close()
-
-        return user
 
     def auth(self):
         session = Session()
@@ -114,56 +108,6 @@ class User(Base):
                 session.commit()
                 session.close()
                 return response
-
-
-class Courses(Base):
-    __tablename__ = 'courses'
-    id = Column(Integer, primary_key=True)
-    name_course = Column(String(100), unique=True)
-    owner_id = Column(
-        Integer,
-        ForeignKey('users.id'),
-        nullable=False)
-    public = Column(Integer)
-    created_date = Column(DateTime(timezone=True), server_default=func.now())
-
-    def __init__(self, name_course, owner, public):
-        self.name_course = name_course
-        self.owner = owner
-        self.public = public
-
-
-class Problem_status(Base):
-    __tablename__ = 'problem_status'
-    STATUS_INITIAL = 0
-
-    id = Column(Integer, primary_key=True)
-    name = Column(String(20), unique=True)
-
-
-class Problems(Base):
-    __tablename__ = 'problems'
-    id = Column(Integer, primary_key=True)
-    course_id = Column(
-        Integer,
-        ForeignKey('courses.id'),
-        nullable=False
-    )
-    type_question = Column(Integer)
-    status_id = Column(
-        Integer,
-        ForeignKey('problem_status.id'),
-        nullable=False,
-        default=Problem_status.STATUS_INITIAL)
-    body = Column(String(3000))
-    solution = Column(String(3000))
-    answer = Column(String(100))
-    answer0 = Column(String(100))
-    answer1 = Column(String(100))
-    answer2 = Column(String(100))
-    answer3 = Column(String(100))
-    mark = Column(Integer)
-    created_date = Column(DateTime(timezone=True), server_default=func.now())
 
 
 Base.metadata.create_all(bind=engine)

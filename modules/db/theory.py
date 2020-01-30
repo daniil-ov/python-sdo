@@ -9,19 +9,16 @@ engine = create_engine('mysql://root:123@127.0.0.1/sdo?charset=utf8', echo=True)
 Session = sessionmaker(bind=engine)
 
 
-class Tests(Base):
-    __tablename__ = 'tests'
+class Theory(Base):
+    __tablename__ = 'theory'
     id = Column(Integer, primary_key=True)
-    course_id = Column(
-        Integer,
-        ForeignKey('courses.id'),
-        nullable=False,
-    )
-    problems = Column(String(300))
-    owner = Column(Integer)
-    duration = Column(Integer)
+    body = Column(String(3000))
+    files = Column(String(100))
     created_date = Column(DateTime(timezone=True), server_default=func.now())
 
+    def __init__(self, body, files):
+        self.body = body
+        self.files = files
 
 
 Base.metadata.create_all(bind=engine)

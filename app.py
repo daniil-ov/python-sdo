@@ -4,6 +4,7 @@ import json
 import validators
 import modules.db.users as db
 from modules.db.problems import get_problem
+from modules.db.users import get_user_with_email
 
 
 class Users(tornado.web.RequestHandler):
@@ -13,7 +14,11 @@ class Users(tornado.web.RequestHandler):
 
         reg_user_info = json.loads(self.request.body)
 
-        if not reg_user_info['username']:
+        if not reg_user_info['name']:
+            success = False
+        if not reg_user_info['second_name']:
+            success = False
+        if not reg_user_info['third_name']:
             success = False
         if (not validators.email(reg_user_info['email'])) or (not reg_user_info['email']):
             success = False
@@ -22,10 +27,15 @@ class Users(tornado.web.RequestHandler):
         if (not reg_user_info['passwordConfirmation']) or (
                 str(reg_user_info['password']) != str(reg_user_info['passwordConfirmation'])):
             success = False
+        if reg_user_info['status'] == 'student':
+            reg_user_info['status'] = 0
+        elif reg_user_info['status'] == 'teacher':
+            reg_user_info['status'] = 1
 
         if success:
             response = {'success': True}
-            new_user = db.User(reg_user_info['username'], reg_user_info['email'], reg_user_info['password'])
+            new_user = db.User(reg_user_info['name'], reg_user_info['second_name'], reg_user_info['third_name'],
+                               reg_user_info['email'], reg_user_info['status'], reg_user_info['password'])
 
             db.User.add_user(new_user)
         else:
@@ -34,17 +44,18 @@ class Users(tornado.web.RequestHandler):
         self.write(json.dumps(response))
 
     def get(self):
-        arg = str(self.get_argument("arg"))
-        print(type(arg), arg)
-        new_user = db.User(arg, arg, '1')
-        self.write(new_user.check_uniqueness())
+        email = str(self.get_argument("email"))
+        print(email)
+
+        self.write(get_user_with_email(email))
 
 
 class Auth(tornado.web.RequestHandler):
     def post(self):
         user_login_info = json.loads(self.request.body)
         print(user_login_info)
-        user_login = db.User('some_name', user_login_info['identifier'], user_login_info['password'])
+        user_login = db.User('name', 'second_name', 'third_name', user_login_info['mail'], '0',
+                             user_login_info['password'])
 
         # self.set_status(401)
 

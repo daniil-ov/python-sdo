@@ -115,6 +115,7 @@ class User(Base):
                 session.close()
                 return response
 
+
 class Tests(Base):
     __tablename__ = 'tests'
     id = Column(Integer, primary_key=True)
