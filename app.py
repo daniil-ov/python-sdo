@@ -4,6 +4,7 @@ import json
 import validators
 import modules.db.users as db
 from modules.db.problems import get_problem
+from modules.db.tests import get_test
 from modules.db.users import get_user_with_email
 
 
@@ -65,16 +66,23 @@ class Auth(tornado.web.RequestHandler):
 class Problem(tornado.web.RequestHandler):
     def get(self):
         id = str(self.get_argument("id"))
-        print(id)
 
         self.write(get_problem(int(id)))
+
+
+class Test(tornado.web.RequestHandler):
+    def get(self):
+        id = str(self.get_argument("id"))
+
+        self.write(get_test(int(id)))
 
 
 # r"/" == root website address
 application = tornado.web.Application([
     (r"/api/users", Users),
     (r"/api/auth", Auth),
-    (r"/api/problem", Problem)
+    (r"/api/problem", Problem),
+    (r"/api/test", Test),
 ], debug=True)
 
 # Start the server at port 7777
