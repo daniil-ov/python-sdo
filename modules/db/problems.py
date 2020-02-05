@@ -1,3 +1,5 @@
+import json
+
 from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, DateTime, func
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
@@ -9,6 +11,32 @@ engine = create_engine('mysql://root:123@127.0.0.1/sdo?charset=utf8', echo=True)
 Session = sessionmaker(bind=engine)
 
 
+def check_test(answers_json):
+
+    answers = json.loads(answers_json)
+    for answer in answers:
+        answers[answer.lstrip('answers_')] = answers.pop(answer)
+
+    print(answers, 'answers')
+    result_test = dict.fromkeys(answers)
+    print(result_test, 'result_test')
+
+    session = Session()
+
+    for answer in answers.keys():
+        for problem in session.query(Problems).filter(Problems.id == answer):
+            if problem.answer == answers[answer]:
+                result_test[answer] = True
+            else:
+                result_test[answer] = False
+
+    session.commit()
+    session.close()
+
+    print(result_test, 'result_test')
+    return result_test
+
+
 def get_problem(id):
     find_problem = dict.fromkeys(['body', 'answer_1', 'answer_2', 'answer_3', 'answer_4'])
 
@@ -16,6 +44,7 @@ def get_problem(id):
 
     for problem in session.query(Problems).filter(Problems.id == id):
         find_problem['body'] = problem.body
+        find_problem['type_question'] = problem.type_question
         find_problem['answer_1'] = problem.answer_1
         find_problem['answer_2'] = problem.answer_2
         find_problem['answer_3'] = problem.answer_3

@@ -8,6 +8,7 @@ engine = create_engine('mysql://root:123@127.0.0.1/sdo?charset=utf8', echo=True)
 
 Session = sessionmaker(bind=engine)
 
+
 def get_test(id):
     find_test = dict.fromkeys(['course_id', 'problems', 'owner', 'duration'])
 
@@ -24,6 +25,7 @@ def get_test(id):
 
     return find_test
 
+
 class Tests(Base):
     __tablename__ = 'tests'
     id = Column(Integer, primary_key=True)
@@ -36,7 +38,6 @@ class Tests(Base):
     owner = Column(Integer)
     duration = Column(Integer)
     created_date = Column(DateTime(timezone=True), server_default=func.now())
-
 
 
 Base.metadata.create_all(bind=engine)
