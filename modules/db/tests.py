@@ -39,5 +39,11 @@ class Tests(Base):
     duration = Column(Integer)
     created_date = Column(DateTime(timezone=True), server_default=func.now())
 
+    def __init__(self, course_id, problems, owner, duration):
+        self.course_id = course_id
+        self.problems = problems
+        self.owner = owner
+        self.duration = duration
+
 
 Base.metadata.create_all(bind=engine)
