@@ -3,6 +3,8 @@ import json
 from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, DateTime, func
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
+import modules.db.initial as models
+import modules.db.tests_stat as tests_stat
 
 Base = declarative_base()
 
@@ -12,29 +14,53 @@ Session = sessionmaker(bind=engine)
 
 
 def check_test(answers_json):
-
     answers = json.loads(answers_json)
-    for answer in answers:
-        answers[answer.lstrip('answers_')] = answers.pop(answer)
+    for answer in answers['answers']:
+        answers['answers'][answer.lstrip('answers_')] = answers['answers'].pop(answer)
 
-    print(answers, 'answers')
-    result_test = dict.fromkeys(answers)
+    print(answers['answers'], 'answers')
+    result_test = dict.fromkeys(answers['answers'])
     print(result_test, 'result_test')
 
     session = Session()
 
-    for answer in answers.keys():
+    # Подсчет количества баллов
+    student_points = 0
+    max_points = 0
+
+    for answer in answers['answers'].keys():
         for problem in session.query(Problems).filter(Problems.id == answer):
-            if problem.answer == answers[answer]:
+            max_points = max_points + problem.mark
+
+            if problem.answer == answers['answers'][answer]:
                 result_test[answer] = True
+                student_points = student_points + problem.mark
             else:
                 result_test[answer] = False
+
+    # выставление оценки
+    mark_student = 2
+    if student_points/max_points >= 0.85:
+        mark_student = 5
+    elif student_points/max_points >= 0.65:
+        mark_student = 4
+    elif student_points/max_points >= 0.5:
+        mark_student = 3
+
+    result = {'result': result_test}
+    result.update({'mark': mark_student})
+
+    session.query(models.Tests_stat) \
+        .filter(models.Tests_stat.test_id == answers['id_test']) \
+        .filter(models.Tests_stat.try_count == '-1') \
+        .filter(models.Tests_stat.user_id == answers['id_user']) \
+        .update({'try_count': tests_stat.count_try_tests(answers['id_user'], answers['id_test']) + 1})
 
     session.commit()
     session.close()
 
-    print(result_test, 'result_test')
-    return result_test
+    print(result_test, 'result')
+    return result
 
 
 def get_problem(id):
@@ -57,13 +83,13 @@ def get_problem(id):
     return find_problem
 
 
-
 class Problem_status(Base):
     __tablename__ = 'problem_status'
     STATUS_INITIAL = 0
 
     id = Column(Integer, primary_key=True)
     name = Column(String(20), unique=True)
+
 
 class Problems(Base):
     __tablename__ = 'problems'

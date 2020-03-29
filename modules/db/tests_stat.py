@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, func, DateTime
+from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, func, update, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.types import TIMESTAMP
@@ -12,34 +12,76 @@ engine = create_engine('mysql://root:123@127.0.0.1/sdo?charset=utf8', echo=True)
 Session = sessionmaker(bind=engine)
 
 
-def add_stat_test(data):
-    print(data)
+def count_try_tests(user_id, test_id):
     session = Session()
-    # find_stat_test = session.query(models.Tests_stat, models.Tests).join(models.Tests,
-    #                                                        models.Tests.id == models.Tests_stat.test_id).filter(
-    #     models.Tests_stat.user_id == data['id_user']).filter(models.Tests_stat.test_id == data[
-    #         'id_test']).filter(models.Tests_stat.try_count == '-1').first()
 
-    find_stat_test = session.query(models.Tests_stat, models.Tests).filter(
-        models.Tests_stat.user_id == data['id_user'] and models.Tests_stat.test_id == data[
-            'id_test'] and models.Tests_stat.try_count == '-1').first()
+    try_cnt = session.query(models.Tests_stat) \
+        .filter(models.Tests_stat.try_count != '-1') \
+        .filter(models.Tests_stat.user_id == user_id) \
+        .filter(models.Tests_stat.test_id == test_id).count()
+
     session.close()
 
-    if find_stat_test:
-        response = dict.fromkeys(['answers', 'second_passed'])
-        print(find_stat_test[0].start_time, 'старт теста')
-        print(find_stat_test[1].duration, 'продолжительность теста')
+    return try_cnt
 
-        response['second_passed'] = (datetime.datetime.now() - find_stat_test[0].start_time).seconds
-        response['answers'] = find_stat_test[0].answers
 
-        return response
-    else:
+def add_stat_test(data):
+    print(data)
+    response = dict.fromkeys(['answers', 'second_passed'])
+    response['second_passed'] = 0
+    response['answers'] = {}
+
+    session = Session()
+
+    find_stat_test = session.query(models.Tests_stat, models.Tests) \
+        .filter(models.Tests_stat.try_count == '-1') \
+        .filter(models.Tests_stat.user_id == data['id_user']) \
+        .filter(models.Tests_stat.test_id == data['id_test']).first()
+    session.close()
+
+    if not find_stat_test:
+        session = Session()
         new_stat_test = models.Tests_stat(data['id_user'], data['id_test'], data['answers'])
         session.add(new_stat_test)
         session.commit()
         session.close()
-        return "success"
+
+    else:
+        delta_time = (datetime.datetime.now() - find_stat_test[0].start_time).seconds
+        print(delta_time, 'прошло времени до')
+        if delta_time > find_stat_test[1].duration:
+            print(delta_time, 'прошло времени')
+            session = Session()
+
+            session.query(models.Tests_stat) \
+                .filter(models.Tests_stat.id == find_stat_test[0].id) \
+                .update({'try_count': count_try_tests(data['id_user'], data['id_test']) + 1})
+
+            new_stat_test = models.Tests_stat(data['id_user'], data['id_test'], data['answers'])
+            session.add(new_stat_test)
+
+            session.commit()
+
+            print(find_stat_test[0].start_time, 'старт теста')
+            print(find_stat_test[1].duration, 'продолжительность теста')
+
+        else:
+            print(find_stat_test[0].start_time, 'старт теста')
+            print(find_stat_test[1].duration, 'продолжительность теста')
+
+            if data['answers'] != {}:
+                session = Session()
+
+                session.query(models.Tests_stat) \
+                    .filter(models.Tests_stat.id == find_stat_test[0].id) \
+                    .update({'answers': data['answers']})
+
+                session.commit()
+
+            response['second_passed'] = delta_time
+            response['answers'] = find_stat_test[0].answers
+
+    return response
 
 
 class Stat_tests(Base):
