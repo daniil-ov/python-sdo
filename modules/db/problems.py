@@ -40,12 +40,15 @@ def check_test(answers_json):
 
     # выставление оценки
     mark_student = 2
-    if student_points/max_points >= 0.85:
-        mark_student = 5
-    elif student_points/max_points >= 0.65:
-        mark_student = 4
-    elif student_points/max_points >= 0.5:
-        mark_student = 3
+    try:
+        if student_points / max_points >= 0.85:
+            mark_student = 5
+        elif student_points / max_points >= 0.65:
+            mark_student = 4
+        elif student_points / max_points >= 0.5:
+            mark_student = 3
+    except ZeroDivisionError:
+        pass
 
     result = {'result': result_test}
     result.update({'mark': mark_student})

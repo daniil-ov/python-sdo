@@ -94,7 +94,12 @@ class User(Base):
             return response
         else:
             if bcrypt.checkpw(self.password_digest.encode('utf-8'), find_user_for_auth.password_digest.encode('utf-8')):
-                encoded_jwt = jwt.encode({'id': find_user_for_auth.id, 'email': find_user_for_auth.email}, '!secret!',
+                encoded_jwt = jwt.encode({'id': find_user_for_auth.id,
+                                          'name': find_user_for_auth.name,
+                                          'second_name': find_user_for_auth.second_name,
+                                          'third_name': find_user_for_auth.third_name,
+                                          'user_status': find_user_for_auth.user_status,
+                                          'email': find_user_for_auth.email}, '!secret!',
                                          algorithm='HS256').decode('utf-8')
                 print("нашел такого пользователя")
                 response['isValid'] = True

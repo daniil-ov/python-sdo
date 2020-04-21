@@ -1,3 +1,5 @@
+import json
+
 from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, func, update, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
@@ -78,8 +80,11 @@ def add_stat_test(data):
 
                 session.commit()
 
+            line = find_stat_test[0].answers.replace("'", '"')
+
             response['second_passed'] = delta_time
-            response['answers'] = find_stat_test[0].answers
+            print(line, '2222222')
+            response['answers'] = json.loads(line)
 
     return response
 

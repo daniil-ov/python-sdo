@@ -5,8 +5,10 @@ import validators
 import modules.db.users as db
 from modules.db.problems import get_problem, check_test
 from modules.db.tests import get_test
+from modules.db.theory import get_theory
 from modules.db.users import get_user_with_email
 from modules.db.tests_stat import add_stat_test
+from modules.db.courses import get_course, get_teacher_course
 
 
 class Users(tornado.web.RequestHandler):
@@ -59,8 +61,6 @@ class Auth(tornado.web.RequestHandler):
         user_login = db.User('name', 'second_name', 'third_name', user_login_info['mail'], '0',
                              user_login_info['password'])
 
-        # self.set_status(401)
-
         self.write(db.User.auth(user_login))
 
 
@@ -88,6 +88,27 @@ class StatTest(tornado.web.RequestHandler):
         self.write(add_stat_test(json.loads(self.request.body)))
 
 
+class Course(tornado.web.RequestHandler):
+    def get(self):
+        id = str(self.get_argument("id"))
+
+        self.write(get_course(int(id)))
+
+
+class CourseOwner(tornado.web.RequestHandler):
+    def get(self):
+        id = str(self.get_argument("id"))
+
+        self.write(get_teacher_course(int(id)))
+
+
+class Theory(tornado.web.RequestHandler):
+    def get(self):
+        id = str(self.get_argument("id"))
+
+        self.write(get_theory(int(id)))
+
+
 # r"/" == root website address
 application = tornado.web.Application([
     (r"/api/users", Users),
@@ -95,7 +116,10 @@ application = tornado.web.Application([
     (r"/api/problem", Problem),
     (r"/api/test", Test),
     (r"/api/check_test", CheckTest),
-    (r"/api/add_stat", StatTest)
+    (r"/api/add_stat", StatTest),
+    (r"/api/course", Course),
+    (r"/api/course_owner", CourseOwner),
+    (r"/api/theory", Theory)
 ], debug=True)
 
 # Start the server at port 7777

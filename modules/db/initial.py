@@ -248,11 +248,16 @@ class Tests(Base):
 class Theory(Base):
     __tablename__ = 'theory'
     id = Column(Integer, primary_key=True)
+    name_theory = Column(String(200))
+    course_id = Column(Integer)
+    parent_id = Column(Integer)
+    tests_id = Column(String(300))
     body = Column(String(3000))
     files = Column(String(100))
     created_date = Column(DateTime(timezone=True), server_default=func.now())
 
-    def __init__(self, body, files):
+    def __init__(self, name_theory, body, files):
+        self.name_theory = name_theory
         self.body = body
         self.files = files
 
@@ -261,8 +266,14 @@ class Modules(Base):
     __tablename__ = 'modules'
     id = Column(Integer, primary_key=True)
     name_module = Column(String(100), unique=True)
-    test_id = Column(
+    course_id = Column(
+        Integer,
+        ForeignKey('courses.id'),
+        nullable=False,
+    )
+    tests_id = Column(
         String(100))
+    order = Column(Integer)
     theory_id = Column(
         String(50))
     description = Column(String(1000))
