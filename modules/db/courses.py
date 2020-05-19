@@ -54,9 +54,14 @@ def get_teacher_course(id_owner):
     print(response, 'resp')
 
     for course in course_list:
+
+        if course.public == 1:
+            status_course = 'Открытый'
+        else:
+            status_course = 'Закрытый'
         response['courses'][course.id]['id'] = course.id
         response['courses'][course.id]['name_course'] = course.name_course
-        response['courses'][course.id]['public'] = course.public
+        response['courses'][course.id]['public'] = status_course
 
     print(response)
 
@@ -64,3 +69,23 @@ def get_teacher_course(id_owner):
     session.close()
 
     return response
+
+
+def create_course(data):
+    response = dict.fromkeys(['id_new_course'])
+
+    if data['name_course'] != '' and data['description_course'] != '':
+        session = Session()
+
+        new_course = models.Courses(data['name_course'], data['description_course'], data['owner'], 0)
+        session.add(new_course)
+        session.commit()
+
+        session.refresh(new_course)
+        response['id_new_course'] = new_course.id
+
+        session.close()
+
+        return response
+    else:
+        return False

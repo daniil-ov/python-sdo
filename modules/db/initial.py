@@ -4,6 +4,7 @@ from sqlalchemy.orm import sessionmaker, relationship
 import bcrypt
 import jwt
 from sqlalchemy.types import TIMESTAMP
+from sqlalchemy.dialects import mysql
 
 Base = declarative_base()
 
@@ -146,6 +147,7 @@ class Courses(Base):
     __tablename__ = 'courses'
     id = Column(Integer, primary_key=True)
     name_course = Column(String(100), unique=True)
+    description_course = Column(mysql.TEXT(collation=u'utf8_general_ci'), nullable=False)
     owner_id = Column(
         Integer,
         ForeignKey('users.id'),
@@ -153,9 +155,10 @@ class Courses(Base):
     public = Column(Integer)
     created_date = Column(DateTime(timezone=True), server_default=func.now())
 
-    def __init__(self, name_course, owner, public):
+    def __init__(self, name_course, description_course, owner_id, public):
         self.name_course = name_course
-        self.owner = owner
+        self.description_course = description_course
+        self.owner_id = owner_id
         self.public = public
 
 

@@ -8,13 +8,13 @@ from modules.db.tests import get_test
 from modules.db.theory import get_theory
 from modules.db.users import get_user_with_email
 from modules.db.tests_stat import add_stat_test
-from modules.db.courses import get_course, get_teacher_course
+from modules.db.courses import get_course, get_teacher_course, create_course
 
 
 class Users(tornado.web.RequestHandler):
     def post(self):
         success = True
-        print(json.loads(self.request.body), '-------- json получен от реакта')
+        # print(json.loads(self.request.body), '-------- json получен от реакта')
 
         reg_user_info = json.loads(self.request.body)
 
@@ -89,6 +89,10 @@ class StatTest(tornado.web.RequestHandler):
 
 
 class Course(tornado.web.RequestHandler):
+    def post(self):
+        new_course = json.loads(self.request.body)
+        self.write(create_course(new_course))
+
     def get(self):
         id = str(self.get_argument("id"))
 
