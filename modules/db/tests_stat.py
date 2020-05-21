@@ -50,9 +50,8 @@ def add_stat_test(data):
 
     else:
         delta_time = (datetime.datetime.now() - find_stat_test[0].start_time).seconds
-        print(delta_time, 'прошло времени до')
+
         if delta_time > find_stat_test[1].duration:
-            print(delta_time, 'прошло времени')
             session = Session()
 
             session.query(models.Tests_stat) \
@@ -64,13 +63,7 @@ def add_stat_test(data):
 
             session.commit()
 
-            print(find_stat_test[0].start_time, 'старт теста')
-            print(find_stat_test[1].duration, 'продолжительность теста')
-
         else:
-            print(find_stat_test[0].start_time, 'старт теста')
-            print(find_stat_test[1].duration, 'продолжительность теста')
-
             if data['answers'] != {}:
                 session = Session()
 
@@ -83,33 +76,10 @@ def add_stat_test(data):
             line = find_stat_test[0].answers.replace("'", '"')
 
             response['second_passed'] = delta_time
-            print(line, '2222222')
+
             response['answers'] = json.loads(line)
 
     return response
 
 
-class Stat_tests(Base):
-    __tablename__ = 'tests_stat'
-    id = Column(Integer, primary_key=True)
-    user_id = Column(
-        Integer,
-        ForeignKey('users.id'),
-        nullable=False,
-    )
-    test_id = Column(
-        Integer,
-        ForeignKey('tests.id'),
-        nullable=False
-    )
-    answers = Column(String(500))
-    try_count = Column(Integer, default=-1)
-    start_time = Column(TIMESTAMP(timezone=True), server_default=func.now())
 
-    def __init__(self, user_id, test_id, answers):
-        self.user_id = user_id
-        self.test_id = test_id
-        self.answers = answers
-
-
-Base.metadata.create_all(bind=engine)

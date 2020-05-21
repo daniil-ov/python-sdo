@@ -282,9 +282,11 @@ class Modules(Base):
     description = Column(String(1000))
     created_date = Column(DateTime(timezone=True), server_default=func.now())
 
-    def __init__(self, name_module, test_id, theory_id, description):
+    def __init__(self, name_module, course_id, test_id, order, theory_id, description):
         self.name_module = name_module
+        self.course_id = course_id
         self.test_id = test_id
+        self.order = order
         self.theory_id = theory_id
         self.description = description
 

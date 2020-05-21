@@ -3,6 +3,7 @@ import tornado.web
 import json
 import validators
 import modules.db.users as db
+from modules.db.modules import create_module, update_module
 from modules.db.problems import get_problem, check_test
 from modules.db.tests import get_test
 from modules.db.theory import get_theory
@@ -99,6 +100,17 @@ class Course(tornado.web.RequestHandler):
         self.write(get_course(int(id)))
 
 
+class Module(tornado.web.RequestHandler):
+    def post(self):
+        data_module = json.loads(self.request.body)
+        id_course = str(self.get_argument("id_course"))
+        id_module = str(self.get_argument("id_module"))
+        if id_module == 'new':
+            self.write(create_module(id_course, data_module))
+        else:
+            self.write(update_module(id_module, data_module))
+
+
 class CourseOwner(tornado.web.RequestHandler):
     def get(self):
         id = str(self.get_argument("id"))
@@ -123,7 +135,8 @@ application = tornado.web.Application([
     (r"/api/add_stat", StatTest),
     (r"/api/course", Course),
     (r"/api/course_owner", CourseOwner),
-    (r"/api/theory", Theory)
+    (r"/api/theory", Theory),
+    (r"/api/module", Module)
 ], debug=True)
 
 # Start the server at port 7777

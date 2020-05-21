@@ -28,8 +28,10 @@ def get_course(id_course):
         response['modules'][module.id]['name'] = module.name_module
         response['modules'][module.id]['course_id'] = module.course_id
         response['modules'][module.id]['tests'] = module.tests_id
+        response['modules'][module.id]['order'] = module.order
         response['modules'][module.id]['description'] = module.description
-        response['modules'][module.id]['theory'] = theory.get_list_theory(module.theory_id)
+        if module.theory_id:
+            response['modules'][module.id]['theory'] = theory.get_list_theory(module.theory_id)
 
     print(response)
 
