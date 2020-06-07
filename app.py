@@ -3,10 +3,11 @@ import tornado.web
 import json
 import validators
 import modules.db.users as db
+from modules.db.gen_test import get_gen_test
 from modules.db.modules import create_module, update_module
-from modules.db.problems import get_problem, check_test
+from modules.db.problems import get_problem, check_test, get_theory_problems, update_problem
 from modules.db.tests import get_test
-from modules.db.theory import get_theory
+from modules.db.theory import get_theory, update_theory
 from modules.db.users import get_user_with_email
 from modules.db.tests_stat import add_stat_test
 from modules.db.courses import get_course, get_teacher_course, create_course
@@ -71,6 +72,11 @@ class Problem(tornado.web.RequestHandler):
 
         self.write(get_problem(int(id)))
 
+    def post(self):
+        id = str(self.get_argument("id"))
+
+        self.write(update_problem(id, json.loads(self.request.body)))
+
 
 class Test(tornado.web.RequestHandler):
     def get(self):
@@ -124,6 +130,27 @@ class Theory(tornado.web.RequestHandler):
 
         self.write(get_theory(int(id)))
 
+    def post(self):
+        id_module = str(self.get_argument("id_module"))
+        id_theory = str(self.get_argument("id_theory"))
+        id_course = str(self.get_argument("id_course"))
+        data_theory = json.loads(self.request.body)
+        self.write(update_theory(int(id_course), id_module, id_theory, data_theory))
+
+
+class TheoryProblems(tornado.web.RequestHandler):
+    def get(self):
+        id_theory = str(self.get_argument("id_theory"))
+
+        self.write(get_theory_problems(int(id_theory)))
+
+
+class GenTest(tornado.web.RequestHandler):
+    def get(self):
+        id_course = str(self.get_argument("id_course"))
+
+        self.write(get_gen_test(int(id_course)))
+
 
 # r"/" == root website address
 application = tornado.web.Application([
@@ -136,7 +163,9 @@ application = tornado.web.Application([
     (r"/api/course", Course),
     (r"/api/course_owner", CourseOwner),
     (r"/api/theory", Theory),
-    (r"/api/module", Module)
+    (r"/api/module", Module),
+    (r"/api/theory_problems", TheoryProblems),
+    (r"/api/gen_test", GenTest)
 ], debug=True)
 
 # Start the server at port 7777

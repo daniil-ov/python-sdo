@@ -29,7 +29,7 @@ def check_test(answers_json):
     max_points = 0
 
     for answer in answers['answers'].keys():
-        for problem in session.query(Problems).filter(Problems.id == answer):
+        for problem in session.query(models.Problems).filter(models.Problems.id == answer):
             max_points = max_points + problem.mark
 
             if problem.answer == answers['answers'][answer]:
@@ -71,7 +71,7 @@ def get_problem(id):
 
     session = Session()
 
-    for problem in session.query(Problems).filter(Problems.id == id):
+    for problem in session.query(models.Problems).filter(models.Problems.id == id):
         find_problem['body'] = problem.body
         find_problem['type_question'] = problem.type_question
         find_problem['answer_1'] = problem.answer_1
@@ -82,80 +82,99 @@ def get_problem(id):
     session.commit()
     session.close()
 
-    print(str(find_problem['body']), 'body--------------1')
+    # print(str(find_problem['body']), 'body--------------1')
     return find_problem
 
 
-class Problem_status(Base):
-    __tablename__ = 'problem_status'
-    STATUS_INITIAL = 0
+def get_theory_problems(id_theory):
+    theory_problems = {}
 
-    id = Column(Integer, primary_key=True)
-    name = Column(String(20), unique=True)
+    session = Session()
+
+    for problem in session.query(models.Problems).filter(models.Problems.theory_id == id_theory):
+        theory_problems[problem.id] = {}
+
+        theory_problems[problem.id]['id'] = problem.id
+        theory_problems[problem.id]['course_id'] = problem.course_id
+        theory_problems[problem.id]['type_question'] = problem.type_question
+        theory_problems[problem.id]['status_id'] = problem.status_id
+        theory_problems[problem.id]['theory_id'] = problem.theory_id
+        theory_problems[problem.id]['body'] = problem.body
+        theory_problems[problem.id]['solution'] = problem.solution
+        theory_problems[problem.id]['answer'] = problem.answer
+        theory_problems[problem.id]['answer_1'] = problem.answer_1
+        theory_problems[problem.id]['answer_2'] = problem.answer_2
+        theory_problems[problem.id]['answer_3'] = problem.answer_3
+        theory_problems[problem.id]['answer_4'] = problem.answer_4
+        theory_problems[problem.id]['mark'] = problem.mark
+
+    session.commit()
+    session.close()
+
+    return theory_problems
 
 
-class Problems(Base):
-    __tablename__ = 'problems'
-    id = Column(Integer, primary_key=True)
-    course_id = Column(
-        Integer,
-        ForeignKey('courses.id'),
-        nullable=False
-    )
-    type_question = Column(Integer)
-    status_id = Column(
-        Integer,
-        ForeignKey('problem_status.id'),
-        nullable=False,
-        default=Problem_status.STATUS_INITIAL)
-    module_id = Column(
-        Integer,
-        ForeignKey('modules.id')
-    )
-    body = Column(String(3000))
-    solution = Column(String(3000))
-    answer = Column(String(100))
-    answer_1 = Column(String(100))
-    answer_2 = Column(String(100))
-    answer_3 = Column(String(100))
-    answer_4 = Column(String(100))
-    mark = Column(Integer)
-    created_date = Column(DateTime(timezone=True), server_default=func.now())
-
-    def __init__(self, type_question, body, solution, answer, answer_1, answer_2, answer_3, answer_4, mark):
-        self.type_question = type_question
-        self.body = body
-        self.solution = solution
-        self.answer = answer
-        self.answer_1 = answer_1
-        self.answer_2 = answer_2
-        self.answer_3 = answer_3
-        self.answer_4 = answer_4
-        self.mark = mark
-
-    def get_problem(self, id):
-        find_problem = dict.fromkeys(['body'])
+def update_problem(id_problem, data_problem):
+    if id_problem == 'new':
+        print(data_problem, 'data_problem')
 
         session = Session()
-        for body in session.query(Problems.id).filter(Problems.id == id):
-            print(body)
 
-        for problem in session.query(Problems).filter(Problems.id == id):
-            find_problem['body'] = problem.body
+        if data_problem['type_question'] == 1:
+            new_problem = models.Problems(data_problem['course_id'], data_problem['type_question'],
+                                          data_problem['status_id'], data_problem['theory_id'], data_problem['body'],
+                                          data_problem['solution'],
+                                          data_problem['answer'], data_problem['answer_1'], data_problem['answer_2'],
+                                          data_problem['answer_3'], data_problem['answer_4'], data_problem['mark'])
+        elif data_problem['type_question'] == 2:
+            new_problem = models.Problems(data_problem['course_id'], data_problem['type_question'],
+                                          data_problem['status_id'], data_problem['theory_id'], data_problem['body'],
+                                          data_problem['solution'],
+                                          data_problem['answer'], None, None,
+                                          None, None, data_problem['mark'])
 
-        if find_problem:
-            success = True
-        else:
-            success = False
+        session.add(new_problem)
+        session.commit()
+        session.close()
+
+        return 'ok'
+
+    elif id_problem != 'new':
+        print(data_problem, 'data_problem')
+        session = Session()
+
+        find_problem = session.query(models.Problems) \
+            .filter(models.Problems.id == id_problem).first()
+
+        find_problem.id = data_problem['id']
+        find_problem.course_id = data_problem['course_id']
+        find_problem.type_question = data_problem['type_question']
+        find_problem.status_id = data_problem['status_id']
+        find_problem.theory_id = data_problem['theory_id']
+        find_problem.body = data_problem['body']
+        find_problem.solution = data_problem['solution']
+        find_problem.answer = data_problem['answer']
+        find_problem.answer_1 = data_problem['answer_1']
+        find_problem.answer_2 = data_problem['answer_2']
+        find_problem.answer_3 = data_problem['answer_3']
+        find_problem.answer_4 = data_problem['answer_4']
+        find_problem.mark = data_problem['mark']
 
         session.commit()
         session.close()
 
-        if success:
-            print(str(find_problem['body'].encode('utf-8')), 'body-------------1')
-            return find_problem
-        else:
-            return False
+        return 'ok'
+    else:
+        return 'error'
 
 
-Base.metadata.create_all(bind=engine)
+def count_problems_theory(id_theory):
+    session = Session()
+    cnt = session.query(models.Problems) \
+        .filter(models.Problems.theory_id == id_theory) \
+        .count()
+
+    session.commit()
+    session.close()
+
+    return cnt

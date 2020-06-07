@@ -54,3 +54,45 @@ def get_list_theory(id_theory):
     session.close()
 
     return response
+
+
+def update_theory(id_course, id_module, id_theory, data_theory):
+    if id_theory == 'new' and data_theory['name_theory'] != '':
+
+        session = Session()
+
+        new_theory = models.Theory(data_theory['name_theory'], id_course, None, None, None, None)
+        session.add(new_theory)
+        session.commit()
+
+        session.refresh(new_theory)
+        id_new_theory = new_theory.id
+
+        find_module = session.query(models.Modules) \
+            .filter(models.Modules.id == id_module).first()
+
+        if find_module.theory_id is None or find_module.theory_id == '':
+            find_module.theory_id = str(id_new_theory)
+        else:
+            find_module.theory_id = str(find_module.theory_id) + '|' + str(id_new_theory)
+
+        session.commit()
+        session.close()
+
+        return 'ok'
+
+    elif id_theory != 'new':
+        session = Session()
+
+        find_theory = session.query(models.Theory) \
+            .filter(models.Theory.id == id_theory).first()
+
+        find_theory.name_theory = data_theory['name_theory']
+        find_theory.body = data_theory['body']
+
+        session.commit()
+        session.close()
+
+        return 'ok'
+    else:
+        return 'error'

@@ -153,6 +153,7 @@ class Courses(Base):
         ForeignKey('users.id'),
         nullable=False)
     public = Column(Integer)
+    status = Column(Integer)
     created_date = Column(DateTime(timezone=True), server_default=func.now())
 
     def __init__(self, name_course, description_course, owner_id, public):
@@ -184,9 +185,9 @@ class Problems(Base):
         ForeignKey('problem_status.id'),
         nullable=False,
         default=Problem_status.STATUS_INITIAL)
-    module_id = Column(
+    theory_id = Column(
         Integer,
-        ForeignKey('modules.id')
+        ForeignKey('theory.id')
     )
     body = Column(String(3000))
     solution = Column(String(3000))
@@ -198,8 +199,12 @@ class Problems(Base):
     mark = Column(Integer)
     created_date = Column(DateTime(timezone=True), server_default=func.now())
 
-    def __init__(self, type_question, body, solution, answer, answer_1, answer_2, answer_3, answer_4, mark):
+    def __init__(self, course_id, type_question, status_id, theory_id, body, solution, answer, answer_1, answer_2,
+                 answer_3, answer_4, mark):
+        self.course_id = course_id
         self.type_question = type_question
+        self.status_id = status_id
+        self.theory_id = theory_id
         self.body = body
         self.solution = solution
         self.answer = answer
@@ -248,6 +253,29 @@ class Tests(Base):
     created_date = Column(DateTime(timezone=True), server_default=func.now())
 
 
+class Gen_test(Base):
+    __tablename__ = 'gen_test'
+    id = Column(Integer, primary_key=True)
+    active = Column(Integer)
+    theory_id = Column(
+        Integer,
+        ForeignKey('theory.id')
+    )
+    description = Column(mysql.TEXT(collation=u'utf8_general_ci'))
+    module_id = Column(
+        Integer,
+        ForeignKey('modules.id')
+    )
+    count_prob = Column(Integer)
+    random_switch = Column(Integer)
+    duration_test = Column(Integer)
+    try_count = Column(Integer)
+    scales = String(30)
+    access_from = Column(DateTime(timezone=True))
+    access_to = Column(DateTime(timezone=True))
+    created_date = Column(DateTime(timezone=True), server_default=func.now())
+
+
 class Theory(Base):
     __tablename__ = 'theory'
     id = Column(Integer, primary_key=True)
@@ -259,8 +287,11 @@ class Theory(Base):
     files = Column(String(100))
     created_date = Column(DateTime(timezone=True), server_default=func.now())
 
-    def __init__(self, name_theory, body, files):
+    def __init__(self, name_theory, course_id, parent_id, tests_id, body, files):
         self.name_theory = name_theory
+        self.course_id = course_id
+        self.parent_id = parent_id
+        self.tests_id = tests_id
         self.body = body
         self.files = files
 
@@ -289,8 +320,6 @@ class Modules(Base):
         self.order = order
         self.theory_id = theory_id
         self.description = description
-
-
 
 
 Base.metadata.create_all(bind=engine)

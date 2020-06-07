@@ -22,7 +22,7 @@ def get_course(id_course):
         .all()
     response['modules'] = {m.id: dict.fromkeys(['name', 'course_id', 'tests', 'order', 'description', 'theory']) for m
                            in modules_list}
-    print(response, 'resp')
+    # print(response, 'resp')
 
     for module in modules_list:
         response['modules'][module.id]['name'] = module.name_module
@@ -33,7 +33,7 @@ def get_course(id_course):
         if module.theory_id:
             response['modules'][module.id]['theory'] = theory.get_list_theory(module.theory_id)
 
-    print(response)
+    # print(response)
 
     # for module in modules_list:
 
@@ -52,20 +52,27 @@ def get_teacher_course(id_owner):
         .filter(models.Courses.owner_id == id_owner) \
         .all()
 
-    response['courses'] = {c.id: dict.fromkeys(['id', 'name_course', 'public']) for c in course_list}
-    print(response, 'resp')
+    response['courses'] = {c.id: dict.fromkeys(['id', 'status', 'name_course', 'public']) for c in course_list}
+    # print(response, 'resp')
 
     for course in course_list:
 
         if course.public == 1:
-            status_course = 'Открытый'
+            public = 'Открытый'
         else:
-            status_course = 'Закрытый'
-        response['courses'][course.id]['id'] = course.id
-        response['courses'][course.id]['name_course'] = course.name_course
-        response['courses'][course.id]['public'] = status_course
+            public = 'Закрытый'
 
-    print(response)
+        if course.status == 0:
+            status = 'Нет'
+        else:
+            status = 'Да'
+
+        response['courses'][course.id]['id'] = course.id
+        response['courses'][course.id]['status'] = status
+        response['courses'][course.id]['name_course'] = course.name_course
+        response['courses'][course.id]['public'] = public
+
+    # print(response)
 
     session.commit()
     session.close()
